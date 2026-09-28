@@ -1,19 +1,8 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#000000">
-<style>html,body{margin:0}body{-webkit-user-select:none;user-select:none}</style>
 <title>NRRL Glass Calc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Sora:wght@300;400;500;600&display=swap">
 <style>
-@font-face{font-family:"Sora";font-style:normal;font-weight:300;font-display:swap;src:url("fonts/sora-latin-300-normal.woff2") format("woff2")}
-@font-face{font-family:"Sora";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/sora-latin-400-normal.woff2") format("woff2")}
-@font-face{font-family:"Sora";font-style:normal;font-weight:500;font-display:swap;src:url("fonts/sora-latin-500-normal.woff2") format("woff2")}
-@font-face{font-family:"Sora";font-style:normal;font-weight:600;font-display:swap;src:url("fonts/sora-latin-600-normal.woff2") format("woff2")}
-@font-face{font-family:"Figtree";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/figtree-latin-400-normal.woff2") format("woff2")}
-@font-face{font-family:"Figtree";font-style:normal;font-weight:500;font-display:swap;src:url("fonts/figtree-latin-500-normal.woff2") format("woff2")}
-@font-face{font-family:"Figtree";font-style:normal;font-weight:600;font-display:swap;src:url("fonts/figtree-latin-600-normal.woff2") format("woff2")}
 /* One deliberate look: black glass with NRRL gold. */
 :root{
   color-scheme:dark;
@@ -232,9 +221,6 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   .field .val{font-size:19px}
 }
 </style>
-</head>
-<body>
-
 
 <div class="backdrop" aria-hidden="true"><div class="glow g1"></div><div class="glow g2"></div></div>
 
@@ -797,6 +783,3 @@ $("hist").addEventListener("click", e=>{
 render();
 })();
 </script>
-
-</body>
-</html>

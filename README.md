@@ -6,4 +6,4 @@ NRRL's business calculator: all-black liquid glass with the gold NRRL logo, an e
 
 Each push to `main` builds a new APK automatically (Actions tab → "Build APK"), published as a release.
 
-The calculator page lives in `app/src/main/assets/index.html` and runs fully offline (no INTERNET permission).
+The calculator page is `web/index.html`. After editing it, run `python3 tools/make_app_html.py` to refresh the app copy in `app/src/main/assets/`. The app runs fully offline (no INTERNET permission).
