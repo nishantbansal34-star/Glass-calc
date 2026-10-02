@@ -1,6 +1,6 @@
 # NRRL Glass Calc
 
-NRRL's business calculator: all-black liquid glass with the gold NRRL logo, an editable cursor, and GST, margin and discount tools.
+NRRL's business calculator: all-black liquid glass with the gold NRRL logo, an editable cursor, and GST, margin, discount, currency and measurement tools.
 
 **Install:** open the latest release on this repo → download the `.apk` → open it to install. New builds install over the old one and keep your history.
 

@@ -89,11 +89,16 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   display:flex;flex-direction:column;touch-action:pan-y;
 }
 .calc-view{margin-top:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right;width:100%}
-.sub{font-family:"Sora",sans-serif;font-size:18px;color:var(--ink-2);font-variant-numeric:tabular-nums;word-break:break-all;min-height:24px;border-radius:10px;padding:0 4px}
+.sub{font-family:"Sora",sans-serif;font-size:18px;color:var(--ink-2);font-variant-numeric:tabular-nums;overflow-wrap:normal;word-break:normal;min-height:24px;border-radius:10px;padding:0 4px}
+.num{white-space:nowrap}
+.live{font-family:"Sora",sans-serif;font-size:30px;font-weight:400;line-height:1.15;color:var(--gold-a);font-variant-numeric:tabular-nums;white-space:nowrap;min-height:35px;margin-top:2px}
+.live small{font-size:.62em;color:var(--ink-3);margin-right:6px}
 .sub.editable{cursor:pointer}
 .sub.editable:hover{background:var(--glass)}
-.main{font-family:"Sora",sans-serif;font-weight:300;font-size:52px;line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;word-break:break-all;max-width:100%;cursor:text;user-select:none;-webkit-user-select:none}
-.main.m2{font-size:40px}.main.m3{font-size:31px}.main.m4{font-size:25px}
+.main{font-family:"Sora",sans-serif;font-weight:300;font-size:52px;line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;word-break:normal;overflow-wrap:normal;max-width:100%;cursor:text;user-select:none;-webkit-user-select:none}
+.main.m2{font-size:44px}.main.m3{font-size:37px}.main.m4{font-size:31px}.main.m5{font-size:26px}.main.m6{font-size:22px}
+.main.fit{white-space:nowrap;text-align:left}
+.main.fit wbr{display:none}
 .op{color:var(--gold);font-weight:400;padding-inline:2px}
 .cm{opacity:.9}
 .caret{
@@ -119,7 +124,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   border:1px solid transparent;transition:background .2s,border-color .2s;
 }
 .field .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
-.field .val{font-family:"Sora",sans-serif;font-size:22px;font-weight:400;font-variant-numeric:tabular-nums;text-align:right;word-break:break-all;user-select:none;-webkit-user-select:none}
+.field .val{font-family:"Sora",sans-serif;font-size:22px;font-weight:400;font-variant-numeric:tabular-nums;text-align:right;word-break:normal;user-select:none;-webkit-user-select:none}
 .field .val small{font-size:13px;color:var(--ink-2);margin-left:3px}
 .field .val .ev{display:block;font-size:12px;color:var(--ink-2)}
 .field.active{background:var(--glass-hi);border-color:rgba(228,185,92,.35);box-shadow:inset 0 1px 0 var(--edge)}
@@ -136,7 +141,13 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .r.big span{color:var(--ink);font-weight:600}
 .r.big b{font-size:24px;font-weight:600;color:var(--gold)}
 .pos{color:var(--good)}.neg{color:var(--bad)}
-.r.big b.pos{color:var(--good)}.r.big b.neg{color:var(--bad)}
+.r.big b.pos{color:var(--good)}
+button.r{width:100%;text-align:left;border-radius:10px}
+button.r:active{background:var(--glass)}
+.r b small{font-size:12px;font-weight:400;color:var(--ink-2);margin-left:4px}
+.r.big b small{font-size:14px;color:var(--gold)}
+.note{font-size:11.5px;color:var(--ink-3);padding-inline:4px}
+.app.tool-mode .row-opts.wrap{flex-wrap:wrap}.r.big b.neg{color:var(--bad)}
 .targets{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .tgt{border-radius:14px;padding:7px 8px;text-align:center;background:var(--glass);border:1px solid var(--edge-soft)}
 .tgt span{display:block;font-size:11px;color:var(--ink-2);letter-spacing:.04em}
@@ -157,16 +168,16 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .arrow{border-radius:18px;display:grid;place-items:center;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
 .arrow:active,.arrow.pressed{transform:scale(.88);transition-duration:.08s}
 .arrow svg{width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.tabs{position:relative;display:grid;grid-template-columns:repeat(4,1fr);border-radius:18px;padding:4px}
+.tabs{position:relative;display:grid;grid-template-columns:repeat(6,1fr);border-radius:18px;padding:4px}
 .thumb{
-  position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/4);border-radius:14px;
+  position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/6);border-radius:14px;
   transform:translateX(calc(var(--i,0) * 100%));
   transition:transform .5s cubic-bezier(.34,1.4,.64,1);
   background:linear-gradient(155deg,rgba(255,255,255,.16),rgba(255,255,255,.04));
   border:1px solid rgba(228,185,92,.35);
   box-shadow:inset 0 1px 0 var(--edge),0 6px 16px -8px var(--shadow);
 }
-.tab{position:relative;z-index:1;padding:9px 0;font-size:12.5px;white-space:nowrap;font-weight:600;color:var(--ink-2);transition:color .25s}
+.tab{position:relative;z-index:1;padding:9px 0;font-size:clamp(10.5px,2.9vw,12.5px);white-space:nowrap;font-weight:600;color:var(--ink-2);transition:color .25s}
 .tab[aria-selected="true"]{color:var(--gold)}
 
 /* keypad */
@@ -176,7 +187,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   display:grid;place-items:center;user-select:none;-webkit-user-select:none;touch-action:manipulation;
   transition:transform .42s cubic-bezier(.34,1.56,.64,1),background .2s;
 }
-.key.pressed,.key:active{transform:scale(.92);transition-duration:.08s}
+.key{touch-action:none}
+.key.pressed{transform:scale(.92);transition-duration:.08s}
 .key.fn{font-size:19px;font-weight:500;color:var(--ink-2)}
 .key.op{color:var(--gold);font-size:30px}
 .key.br{font-size:24px;letter-spacing:.06em}
@@ -216,7 +228,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
 @media (max-height:680px){
-  .main{font-size:42px}.main.m2{font-size:33px}.main.m3{font-size:26px}.main.m4{font-size:21px}
+  .main{font-size:44px}.main.m2{font-size:38px}.main.m3{font-size:32px}.main.m4{font-size:27px}.main.m5{font-size:23px}.main.m6{font-size:20px}
+  .live{font-size:26px;min-height:30px}
   .pad{gap:8px}
   .field .val{font-size:19px}
 }
@@ -255,6 +268,8 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
       <button class="tab" role="tab" data-mode="gst">GST</button>
       <button class="tab" role="tab" data-mode="margin">Margin</button>
       <button class="tab" role="tab" data-mode="discount">Discount</button>
+      <button class="tab" role="tab" data-mode="fx">Currency</button>
+      <button class="tab" role="tab" data-mode="units">Measure</button>
     </nav>
   </div>
 
@@ -299,22 +314,49 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 <script>
 (function(){
 const OPS = "+−×÷";
-const MODES = ["calc","gst","margin","discount"];
+const MODES = ["calc","gst","margin","discount","fx","units"];
 const FIELDS = {
   gst:[["amount","Amount","₹"],["rate","GST rate","%"]],
   margin:[["cost","Cost price","₹"],["sell","Selling price","₹"],["qty","Quantity","pcs"]],
   discount:[["mrp","MRP","₹"],["disc","Discount","%"],["qty","Quantity","pcs"]]
 };
+/* currencies: rate = rupees for 1 unit (editable, kept on the phone) */
+const CUR = {USD:"$", CNY:"¥", EUR:"€", GBP:"£", AED:"AED"};
+/* measurements: factor = size of 1 unit in the category's base unit */
+const UNITS = {
+  length:{label:"Length", list:[["mm","mm",0.001],["cm","cm",0.01],["m","m",1],["in","inch",0.0254],["ft","ft",0.3048],["yd","yard (gaj)",0.9144]]},
+  weight:{label:"Weight", list:[["g","g",0.001],["kg","kg",1],["oz","oz",0.028349523125],["lb","lb",0.45359237],["q","quintal",100],["t","tonne",1000]]},
+  area:{label:"Area", list:[["sqin","sq inch",0.00064516],["sqft","sq ft",0.09290304],["sqyd","sq yard (gaj)",0.83612736],["sqm","sq m",1],["acre","acre",4046.8564224]]},
+  volume:{label:"Volume", list:[["ml","ml",0.001],["l","litre",1],["gal","gallon (US)",3.785411784],["cft","cu ft",28.316846592],["cum","cu m",1000]]}
+};
+const UDEF = {length:["ft","m"], weight:["kg","lb"], area:["sqft","sqm"], volume:["l","ml"]};
+const PREFIX = ["₹","$","¥","€","£"];
+function fieldsFor(m){
+  if(m==="fx"){
+    const c = S.fx.cur;
+    return [["amt", S.fx.dir==="to" ? "Amount in "+c : "Amount in ₹", S.fx.dir==="to" ? CUR[c] : "₹"], ["r_"+c, "₹ for 1 "+c, "₹"]];
+  }
+  if(m==="units"){
+    const u = UNITS[S.units.cat].list.find(x=>x[0]===S.units.from) || UNITS[S.units.cat].list[0];
+    return [["val","Value",u[0]==="in"?"inch":u[1].replace(/ \(.*\)/,"")]];
+  }
+  return FIELDS[m];
+}
 const DEFAULT = {
   mode:"calc", expr:"1250×24+18%", cur:null, prev:"", done:false, hist:[],
   gst:{amount:"2360", rate:"18", dir:"remove", split:"intra"},
   margin:{cost:"82", sell:"120", qty:"250"},
   discount:{mrp:"499", disc:"20", qty:"12"},
-  active:{gst:"amount", margin:"cost", discount:"mrp"}
+  fx:{cur:"USD", dir:"to", amt:"100", r_USD:"96.15", r_CNY:"14.35", r_EUR:"108.70", r_GBP:"128.20", r_AED:"26.18"},
+  units:{cat:"length", from:"ft", to:"m", val:"10"},
+  active:{gst:"amount", margin:"cost", discount:"mrp", fx:"amt", units:"val"}
 };
 let S;
 try{ S = Object.assign(structuredClone(DEFAULT), JSON.parse(localStorage.getItem("nrrl-glass-calc")||"null")||{}); }
 catch(e){ S = structuredClone(DEFAULT); }
+/* older saves don't know the newer tools: fill in what's missing */
+["gst","margin","discount","fx","units","active"].forEach(k=>{ S[k] = Object.assign(structuredClone(DEFAULT[k]), S[k]||{}); });
+if(!MODES.includes(S.mode)) S.mode = "calc";
 let fresh = true;        // next digit replaces the active field's value
 let fieldCur = null;     // cursor inside the active field (null = end)
 function save(){ try{ localStorage.setItem("nrrl-glass-calc", JSON.stringify(S)); }catch(e){} }
@@ -348,14 +390,18 @@ function exprHTML(s, cur){
     return run;
   });
   const caret = '<span class="caret"></span>';
-  let out = "";
+  let out = "", inNum = false;
   for(let i=0;i<n;i++){
+    const c = s[i], isNum = /[\d.%]/.test(c);
+    if(isNum && !inNum){ out += '<span class="num">'; inNum = true; }
+    if(!isNum && inNum){ out += '</span>'; inNum = false; }
+    if(!isNum && i>0 && OPS.includes(c)) out += '<wbr>';
     if(comma[i]) out += '<span class="cm">,</span>';
     if(cur===i) out += caret;
-    const c = s[i];
     out += `<span class="ch${OPS.includes(c)||c==="("||c===")"?" op":""}" data-i="${i}">${c}</span>`;
   }
   if(cur!=null && cur>=n) out += caret;
+  if(inNum) out += '</span>';
   return out;
 }
 
@@ -442,7 +488,7 @@ function getTarget(){
   if(S.mode==="calc"){
     const s = S.expr; return {s, c: S.cur==null ? s.length : Math.min(S.cur, s.length)};
   }
-  const s = S[S.mode][S.active[S.mode]];
+  const s = S[S.mode][S.active[S.mode]] ?? "";
   return {s, c: fieldCur==null ? s.length : Math.min(fieldCur, s.length)};
 }
 function setTarget(s, c){
@@ -454,41 +500,54 @@ function setTarget(s, c){
 /* ---------- rendering ---------- */
 const $ = id => document.getElementById(id);
 const screen = $("screen");
-function sizeClass(len){ return len>22?"m4":len>16?"m3":len>11?"m2":""; }
+/* biggest font that keeps the line on one row; if nothing fits, wrap between numbers */
+const SIZES = ["","m2","m3","m4","m5","m6"];
+function fitMain(){
+  const el = screen.querySelector(".main"); if(!el) return;
+  el.classList.add("fit");
+  let pick = "m4";                     // too long even small: wrap between numbers at a readable size
+  for(const z of SIZES.slice(0,5)){
+    el.classList.remove(...SIZES.filter(Boolean)); if(z) el.classList.add(z);
+    const rg = document.createRange(); rg.selectNodeContents(el);
+    if(rg.getBoundingClientRect().width <= el.parentElement.clientWidth - 2){ pick = z; break; }
+  }
+  el.classList.remove("fit", ...SIZES.filter(Boolean)); if(pick) el.classList.add(pick);
+  screen.scrollTop = screen.scrollHeight;  // keep the live total in view
+}
 
 function renderCalc(){
   const hasOp = /[+−×÷%]/.test(S.expr.replace(/^−/,""));
   const val = evaluate(S.expr);
-  let main, sub, words, len;
+  const words = inWords(val);
   if(S.done){
-    main = fmt(val); len = main.length;
-    sub = exprHTML(S.prev, null)+" =";
-    words = inWords(val);
+    screen.innerHTML = `<div class="calc-view">
+      <div class="sub editable" data-editprev="1" title="Tap to edit">${exprHTML(S.prev, null)} =</div>
+      <div class="main" data-scrub="1"><span class="num">${fmt(val)}</span></div>
+      <div class="words">${words}</div>
+      <div class="hint-line">Tap the sum above to fix it</div></div>`;
   }else{
     const {c} = getTarget();
-    main = S.expr ? exprHTML(S.expr, c) : '<span class="caret"></span><span class="ch">0</span>';
-    len = fmt(0).length + S.expr.length*1.15;
-    sub = hasOp && val!=null ? "= "+fmt(val) : "";
-    words = inWords(val);
+    const main = S.expr ? exprHTML(S.expr, c) : '<span class="caret"></span><span class="ch">0</span>';
+    const total = hasOp && val!=null ? `<small>=</small>${fmt(val)}` : "";
+    screen.innerHTML = `<div class="calc-view">
+      <div class="main" data-scrub="1">${main}</div>
+      <div class="live">${total}</div>
+      <div class="words">${words}</div></div>`;
   }
-  screen.innerHTML = `<div class="calc-view">
-    <div class="sub${S.done?" editable":""}" ${S.done?'data-editprev="1" title="Tap to edit"':""}>${sub}</div>
-    <div class="main ${sizeClass(len)}" data-scrub="1">${main}</div>
-    <div class="words">${words}</div>
-    ${S.done ? '<div class="hint-line">Tap the sum above to fix it</div>' : ""}</div>`;
+  fitMain();
 }
 
 function fieldHTML(mode,[key,label,unit]){
   const raw = S[mode][key];
   const active = S.active[mode]===key;
-  const isMoney = unit==="₹";
+  const isMoney = PREFIX.includes(unit);
   const hasOp = /[+−×÷%]/.test(raw.replace(/^−/,""));
   let shown;
   if(active){
     const c = fieldCur==null ? raw.length : Math.min(fieldCur, raw.length);
     shown = raw ? exprHTML(raw, c) : '<span class="caret"></span>0';
   } else shown = raw ? exprHTML(raw, null) : "0";
-  if(isMoney) shown = "₹"+shown;
+  if(isMoney) shown = unit+shown;
   const ev = hasOp ? `<span class="ev">= ${fmt(evaluate(raw))}</span>` : "";
   const u = isMoney ? "" : `<small>${unit}</small>`;
   return `<button class="field${active?" active":""}" data-field="${key}" id="f-${mode}-${key}">
@@ -552,11 +611,51 @@ function renderDiscount(){
     </div></div>`;
 }
 
+const fmtW = (v, dec) => {          // western grouping for foreign money
+  if(v==null || !isFinite(v)) return "—";
+  const [i,d] = Math.abs(v).toFixed(dec).split(".");
+  return (v<0?"−":"") + i.replace(/\B(?=(\d{3})+(?!\d))/g,",") + (d ? "."+d : "");
+};
+const fxMoney = (v, c) => CUR[c].length>1 ? `${fmtW(v,2)}<small>${CUR[c]}</small>` : CUR[c]+fmtW(v,2);
+const sig = v => !isFinite(v) ? NaN : Math.abs(v)>=1 ? Math.round(v*1e4)/1e4 : Number(v.toPrecision(5));
+
+function renderFX(){
+  const f = S.fx, c = f.cur, A = num("fx","amt"), r = num("fx","r_"+c);
+  const toINR = f.dir==="to";
+  const out = toINR ? A*r : (r ? A/r : NaN);
+  screen.innerHTML = `<div class="tool">
+    <div class="row-opts wrap">${seg("cur",Object.keys(CUR).map(k=>[k,k]))}${seg("dir",[["to",c+" → ₹"],["from","₹ → "+c]])}</div>
+    <div class="fields">${fieldsFor("fx").map(x=>fieldHTML("fx",x)).join("")}</div>
+    <div class="note">Rates are saved on your phone. Update the rate to today's bank or supplier rate.</div>
+    <div class="results">
+      <div class="r"><span>1 ${c}</span><b>${money(r)}</b></div>
+      <div class="r"><span>₹100</span><b>${r ? fxMoney(100/r, c) : "—"}</b></div>
+      <div class="r big"><span>${toINR ? "In rupees" : "In "+c}</span><b>${toINR ? money(out) : (isFinite(out) ? fxMoney(out, c) : "—")}</b></div>
+    </div></div>`;
+}
+
+function renderUnits(){
+  const u = S.units, cat = UNITS[u.cat], v = num("units","val");
+  const from = cat.list.find(x=>x[0]===u.from) || cat.list[0];
+  const to = cat.list.find(x=>x[0]===u.to && x[0]!==from[0]) || cat.list.find(x=>x[0]!==from[0]);
+  const base = v*from[2];
+  const row = (x, big) => `<button class="r${big?" big":""}" data-opt="to" data-v="${x[0]}"><span>${x[1]}</span><b>${fmt(sig(base/x[2]))}<small>${x[0]==="in"?"in":x[1].replace(/ \(.*\)/,"")}</small></b></button>`;
+  screen.innerHTML = `<div class="tool">
+    <div class="row-opts">${seg("cat",Object.keys(UNITS).map(k=>[k,UNITS[k].label]))}</div>
+    <div class="row-opts">${seg("from",cat.list.map(x=>[x[0], x[0]==="in"?"in":x[1].replace(/ \(.*\)/,"")]))}</div>
+    <div class="fields">${fieldsFor("units").map(x=>fieldHTML("units",x)).join("")}</div>
+    <div class="results">
+      ${cat.list.filter(x=>x[0]!==from[0] && x[0]!==to[0]).map(x=>row(x,false)).join("")}
+      ${row(to,true)}
+    </div>
+    <div class="note">Tap a row to make it the main answer.</div></div>`;
+}
+
 function render(){
   $("thumb").style.setProperty("--i", MODES.indexOf(S.mode));
   $("app").classList.toggle("tool-mode", S.mode!=="calc");
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.mode===S.mode));
-  ({calc:renderCalc, gst:renderGST, margin:renderMargin, discount:renderDiscount})[S.mode]();
+  ({calc:renderCalc, gst:renderGST, margin:renderMargin, discount:renderDiscount, fx:renderFX, units:renderUnits})[S.mode]();
   save();
 }
 
@@ -624,7 +723,9 @@ function pressCalc(k){
 }
 
 function pressField(k){
-  const m = S.mode, key = S.active[m], list = FIELDS[m];
+  const m = S.mode, list = fieldsFor(m);
+  if(!list.some(f=>f[0]===S.active[m])) S.active[m] = list[0][0];
+  const key = S.active[m];
   if(k==="C"){ S[m][key] = ""; fieldCur = null; fresh = false; return; }
   if(k==="="){
     const v = evaluate(S[m][key]); if(v!=null) S[m][key] = toExpr(v);
@@ -654,11 +755,18 @@ function press(k){
 }
 
 /* keypad */
-$("pad").addEventListener("click", e=>{ const b = e.target.closest(".key"); if(b) press(b.dataset.k); });
+/* Keys fire the moment a finger lands (pointerdown), not on release (click).
+   With click, a second finger landing before the first lifts, or a key shrinking
+   out from under the finger, used to swallow taps when typing fast. */
 $("pad").addEventListener("pointerdown", e=>{
   const b = e.target.closest(".key"); if(!b) return;
-  b.classList.add("pressed"); setTimeout(()=>b.classList.remove("pressed"),120);
+  if(e.pointerType==="mouse" && e.button!==0) return;
+  e.preventDefault();
+  b.classList.add("pressed"); clearTimeout(b._t); b._t = setTimeout(()=>b.classList.remove("pressed"),110);
+  press(b.dataset.k);
 });
+/* keyboard / accessibility activation still works (those clicks have detail 0) */
+$("pad").addEventListener("click", e=>{ if(e.detail!==0) return; const b = e.target.closest(".key"); if(b) press(b.dataset.k); });
 
 /* cursor arrows, with hold-to-repeat */
 function holdRepeat(btn, act, rate){
@@ -725,7 +833,20 @@ screen.addEventListener("click", e=>{
     render(); return;
   }
   const o = e.target.closest("[data-opt]");
-  if(o){ S[S.mode][o.dataset.opt] = o.dataset.v; render(); return; }
+  if(o){
+    const opt = o.dataset.opt, v = o.dataset.v;
+    S[S.mode][opt] = v;
+    if(S.mode==="fx"){
+      if(opt==="cur" && S.active.fx.startsWith("r_")) S.active.fx = "r_"+v;
+      if(opt==="cur" || opt==="dir"){ fieldCur = null; fresh = true; }
+    }
+    if(S.mode==="units"){
+      if(opt==="cat"){ S.units.from = UDEF[v][0]; S.units.to = UDEF[v][1]; }
+      if(opt==="from" && S.units.to===v){ const o2 = UNITS[S.units.cat].list.find(x=>x[0]!==v); S.units.to = o2[0]; }
+      if(opt!=="to"){ fieldCur = null; fresh = true; }
+    }
+    buzz(); render(); return;
+  }
   const c = e.target.closest("[data-chip]");
   if(c){ S[S.mode][c.dataset.chip] = c.dataset.v; fieldCur = null; render(); }
 });
@@ -753,7 +874,7 @@ function toast(msg){
 }
 $("copyBtn").addEventListener("click", ()=>{
   const v = primaryValue(); if(v==null) return;
-  const text = typeof v==="number" ? String(v) : v.replace(/[₹,]/g,"").replace("−","-");
+  const text = typeof v==="number" ? String(v) : v.replace("−","-").replace(/[^\d.\-]/g,"");
   const label = typeof v==="number" ? fmt(v) : v;
   if(window.NRRL && NRRL.copy){ try{ NRRL.copy(text); toast("Copied "+label); }catch(e){ toast(label); } return; }
   try{ navigator.clipboard.writeText(text).then(()=>toast("Copied "+label)).catch(()=>toast(label)); }
@@ -781,5 +902,8 @@ $("hist").addEventListener("click", e=>{
 });
 
 render();
+/* re-fit once the bundled fonts are in, and when the screen size changes */
+try{ document.fonts.ready.then(()=>{ if(S.mode==="calc") fitMain(); }); }catch(e){}
+window.addEventListener("resize", ()=>{ if(S.mode==="calc") fitMain(); });
 })();
 </script>
