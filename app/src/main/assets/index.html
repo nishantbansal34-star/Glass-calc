@@ -244,6 +244,28 @@ button.r:active{background:var(--glass)}
   .pad{gap:8px}
   .field .val{font-size:19px}
 }
+
+/* ===== Liquid kit ===== */
+.key.pressed{transform:none}
+.key,.tbtn,.arrow{transition-property:background,color,box-shadow,border-color!important}
+.lk-refract .key.glass:not(.eq){background:linear-gradient(155deg,rgba(255,255,255,.07),rgba(255,255,255,.02) 60%)}
+/* specular rim + touch light overlay (injected span) */
+.lk-glint{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;overflow:hidden}
+.lk-glint::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.2px;
+  background:conic-gradient(from var(--lk-a,200deg) at 50% 50%,rgba(255,240,210,.9),rgba(255,255,255,.05) 18%,rgba(255,255,255,0) 40%,rgba(160,190,255,.55) 52%,rgba(255,255,255,0) 66%,rgba(255,255,255,.05) 85%,rgba(255,240,210,.9));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:var(--lk-rim,.55);transition:opacity .35s}
+.lk-glint::after{content:"";position:absolute;width:240px;height:240px;left:calc(var(--lk-x,50%) - 120px);top:calc(var(--lk-y,50%) - 120px);border-radius:50%;
+  background:radial-gradient(circle,rgba(255,232,190,.30),rgba(255,232,190,.08) 40%,transparent 68%);opacity:var(--lk-on,0);transition:opacity .45s ease-out;mix-blend-mode:screen}
+.key .lk-glint::after{width:150px;height:150px;left:calc(var(--lk-x,50%) - 75px);top:calc(var(--lk-y,50%) - 75px)}
+.lk-pressed>.lk-glint{--lk-on:1;--lk-rim:1}
+.lk-pressed>.lk-glint::after{transition:opacity .08s}
+
+/* ripple of light on tap */
+.lk-ripple{position:absolute;border-radius:50%;pointer-events:none;z-index:1;width:10px;height:10px;margin:-5px 0 0 -5px;
+  background:radial-gradient(circle,rgba(255,236,200,.35),rgba(255,236,200,0) 70%);animation:lkRipple .6s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes lkRipple{to{transform:scale(28);opacity:0}}
+
+@media (prefers-reduced-motion: reduce){.lk-ripple{animation:none!important}}
 </style>
 </head>
 <body>
@@ -919,6 +941,102 @@ render();
 /* re-fit once the bundled fonts are in, and when the screen size changes */
 try{ document.fonts.ready.then(()=>{ if(S.mode==="calc") fitMain(); }); }catch(e){}
 window.addEventListener("resize", ()=>{ if(S.mode==="calc") fitMain(); });
+})();
+</script>
+<script>
+/* ===== Liquid kit (shared with Orbe Pay): refraction glass, spring presses, touch light, ripples ===== */
+(function(){
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const root=document.documentElement;
+class Spring{
+  constructor(v=0,{k=420,c=26,m=1,eps=.0005}={}){this.x=v;this.v=0;this.t=v;this.k=k;this.c=c;this.m=m;this.eps=eps;this.subs=[];this.raf=0}
+  to(t,{v,k,c}={}){this.t=t;if(v!==undefined)this.v=v;if(k)this.k=k;if(c)this.c=c;this.run()}
+  set(x){this.x=x;this.t=x;this.v=0;this.emit()}
+  on(f){this.subs.push(f);return this}
+  emit(){for(const f of this.subs)f(this.x,this)}
+  run(){if(this.raf)return;let last=performance.now();
+    const tick=now=>{let dt=Math.min(.032,(now-last)/1000);last=now;
+      // fixed sub-steps keep stiff springs stable
+      const n=Math.ceil(dt/.004);dt/=n;
+      for(let i=0;i<n;i++){const a=(-this.k*(this.x-this.t)-this.c*this.v)/this.m;this.v+=a*dt;this.x+=this.v*dt}
+      this.emit();
+      if(Math.abs(this.v)<this.eps*4&&Math.abs(this.x-this.t)<this.eps){this.x=this.t;this.v=0;this.emit();this.raf=0;this.done&&this.done();return}
+      this.raf=requestAnimationFrame(tick)};
+    this.raf=requestAnimationFrame(tick)}
+}
+
+const GLASS_SEL=".key,.screen-wrap,.tbtn,.arrow,.seg button";
+function glint(el){if(el.querySelector(":scope>.lk-glint"))return;const g=document.createElement("span");g.className="lk-glint";g.setAttribute("aria-hidden","true");
+  if(getComputedStyle(el).position==="static")el.style.position="relative";el.appendChild(g)}
+function glintAll(scope=document){scope.querySelectorAll(GLASS_SEL).forEach(glint)}
+function lightAt(el,e){const r=el.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  el.style.setProperty("--lk-x",x+"px");el.style.setProperty("--lk-y",y+"px");
+  el.style.setProperty("--lk-a",(Math.atan2(y-r.height/2,x-r.width/2)*180/Math.PI+90)+"deg")}
+function ripple(el,e){if(reduce)return;const r=el.getBoundingClientRect(),d=document.createElement("span");d.className="lk-ripple";
+  d.style.left=(e.clientX-r.left)+"px";d.style.top=(e.clientY-r.top)+"px";
+  if(getComputedStyle(el).overflow!=="hidden"){el.style.overflow="hidden"}
+  el.appendChild(d);setTimeout(()=>d.remove(),650)}
+
+document.addEventListener("pointermove",e=>{const el=e.target.closest(GLASS_SEL);if(el&&el.classList.contains("lk-pressed"))lightAt(el,e)},{passive:true});
+let tiltA=200;
+addEventListener("deviceorientation",e=>{if(e.gamma==null)return;const a=200+e.gamma*2.2+(e.beta-45)*.6;if(Math.abs(a-tiltA)<1.5)return;tiltA=a;root.style.setProperty("--lk-a",a.toFixed(1)+"deg")},{passive:true});
+/* spring press: sink fast, rebound with a little overshoot, can be re-grabbed mid-bounce */
+const springs=new WeakMap();
+function springFor(el){let s=springs.get(el);if(!s){s=new Spring(1,{k:620,c:20}).on(x=>{el.style.transform=x===1?"":`scale(${x.toFixed(4)})`});springs.set(el,s)}return s}
+document.addEventListener("pointerdown",e=>{
+  const el=e.target.closest(".key,.tbtn,.arrow");if(!el||reduce)return;
+  springFor(el).to(el.classList.contains("key")?.9:.86,{k:1000,c:36});
+  el.classList.add("lk-pressed");lightAt(el,e);ripple(el,e);
+  const up=()=>{springFor(el).to(1,{k:560,c:14});el.classList.remove("lk-pressed");removeEventListener("pointerup",up);removeEventListener("pointercancel",up)};
+  addEventListener("pointerup",up);addEventListener("pointercancel",up);
+},{passive:true,capture:true});
+const canRefract=(()=>{try{return !!window.chrome&&CSS.supports("backdrop-filter","url(#x)")&&!/Firefox/.test(navigator.userAgent)}catch(e){return false}})();
+let svgHost=null;
+const NS="http://www.w3.org/2000/svg";
+function host(){if(!svgHost){svgHost=document.createElementNS(NS,"svg");svgHost.setAttribute("width","0");svgHost.setAttribute("height","0");svgHost.setAttribute("aria-hidden","true");svgHost.style.position="absolute";document.body.appendChild(svgHost)}return svgHost}
+/* displacement map: inside a "bezel" band near the rounded edge, push the backdrop sample inward,
+   strongest at the very edge (like a convex glass lens), zero in the flat middle */
+function dispMap(w,h,rad,bezel){
+  const s=.5,W=Math.max(2,Math.round(w*s)),H=Math.max(2,Math.round(h*s)),R=rad*s,B=bezel*s;
+  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");const img=x.createImageData(W,H),d=img.data;
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
+    const px=i+.5,py=j+.5;
+    // signed distance to rounded rect (positive inside) and its outward normal
+    const qx=Math.max(R-px,0,px-(W-R)),qy=Math.max(R-py,0,py-(H-R));
+    let dist,nx,ny;
+    if(qx>0&&qy>0){const l=Math.hypot(qx,qy);dist=R-l;nx=(px<R?-1:1)*qx/l;ny=(py<R?-1:1)*qy/l}
+    else{const dl=px,dr=W-px,dt=py,db=H-py,m=Math.min(dl,dr,dt,db);dist=m;nx=m===dl?-1:m===dr?1:0;ny=m===dt?-1:m===db?1:0;if(nx&&ny)ny=0}
+    let mag=0;if(dist<B&&dist>0){const t=1-dist/B;mag=t*t*(3-2*t)} // smooth curvature
+    const o=(j*W+i)*4;d[o]=128-nx*mag*127;d[o+1]=128-ny*mag*127;d[o+2]=128;d[o+3]=255}
+  x.putImageData(img,0,0);return c.toDataURL();
+}
+const filters=new Map();
+function refractFilter(w,h,rad,{bezel=22,scale=34,blur=5,sat=1.35}={}){
+  const key=[Math.round(w),Math.round(h),rad,bezel,scale,blur].join("x");if(filters.has(key))return filters.get(key);
+  const id="lkf"+filters.size;const f=document.createElementNS(NS,"filter");
+  f.setAttribute("id",id);f.setAttribute("x","0");f.setAttribute("y","0");f.setAttribute("width",w);f.setAttribute("height",h);
+  f.setAttribute("filterUnits","userSpaceOnUse");f.setAttribute("primitiveUnits","userSpaceOnUse");f.setAttribute("color-interpolation-filters","sRGB");
+  f.innerHTML=`<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}" result="b"/>
+    <feImage href="${dispMap(w,h,rad,bezel)}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="m"/>
+    <feDisplacementMap in="b" in2="m" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="d"/>
+    <feColorMatrix in="d" type="saturate" values="${sat}"/>`;
+  host().appendChild(f);filters.set(key,id);return id;
+}
+function refract(el,opts){if(!canRefract||!el)return;const r=el.getBoundingClientRect();if(r.width<4||r.height<4)return;
+  const rad=parseFloat(getComputedStyle(el).borderTopLeftRadius)||0;
+  const id=refractFilter(r.width,r.height,Math.min(rad,r.width/2,r.height/2),opts);
+  el.style.backdropFilter=el.style.webkitBackdropFilter=`url(#${id})`}
+
+function refractAll(){
+  document.querySelectorAll(".key:not(.eq)").forEach(el=>refract(el,{bezel:14,scale:22,blur:9,sat:1.6}));
+  document.querySelectorAll(".screen-wrap").forEach(el=>refract(el,{bezel:26,scale:40,blur:12,sat:1.6}));
+}
+if(canRefract)root.classList.add("lk-refract");
+glintAll();requestAnimationFrame(refractAll);
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{glintAll();refractAll()},200)});
+new MutationObserver(m=>{let need=false;for(const r of m)for(const n of r.addedNodes)if(n.nodeType===1&&(n.matches?.(GLASS_SEL)||n.querySelector?.(GLASS_SEL)))need=true;if(need){glintAll();requestAnimationFrame(refractAll)}}).observe(document.body,{childList:true,subtree:true});
+// the pad changes size in tool mode: re-measure when it does
+try{new ResizeObserver(()=>requestAnimationFrame(refractAll)).observe(document.getElementById("pad"))}catch(e){}
 })();
 </script>
 
