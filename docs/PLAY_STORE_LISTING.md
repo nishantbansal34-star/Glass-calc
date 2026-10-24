@@ -5,7 +5,7 @@
 
 ## English
 **App name (30):** Glass Calc: GST & Margin
-**Short description (80):** Beautiful glass calculator with GST, margin, discount, currency & amount in words.
+**Short description (80):** Glass calculator with GST, margin, discount, currency and amount in words.
 
 **Full description:**
 Glass Calc is a fast, beautiful calculator made for shop owners and traders in India.
