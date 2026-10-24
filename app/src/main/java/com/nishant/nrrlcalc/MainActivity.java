@@ -6,7 +6,10 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.WindowInsets;
+import android.widget.FrameLayout;
 import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.webkit.JavascriptInterface;
@@ -76,7 +79,23 @@ public class MainActivity extends Activity {
             }
         });
 
-        setContentView(web);
+        // Android 15+ draws apps edge to edge: pad the calculator away from the system bars and cutout.
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Color.BLACK);
+        root.addView(web, new FrameLayout.LayoutParams(-1, -1));
+        if (Build.VERSION.SDK_INT >= 30) {
+            root.setOnApplyWindowInsetsListener((v, ins) -> {
+                android.graphics.Insets b = ins.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                v.setPadding(b.left, b.top, b.right, b.bottom);
+                return WindowInsets.CONSUMED;
+            });
+        }
+        setContentView(root);
+        // Back gesture / button (Android 13+ predictive back; required when targeting Android 16)
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
+        }
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
         } else {
@@ -102,17 +121,15 @@ public class MainActivity extends Activity {
     @Override
     @SuppressWarnings("deprecation")
     public void onBackPressed() {
-        // Let the page close the history sheet first; otherwise leave the app.
-        web.evaluateJavascript("(window.__nrrlBack && window.__nrrlBack()) ? 'y' : 'n'", value -> {
-            if (value == null || !value.contains("y")) {
-                exitApp();
-            }
-        });
+        handleBack(); // Android 12 and older
     }
 
-    @SuppressWarnings("deprecation")
-    private void exitApp() {
-        super.onBackPressed();
+    /** Let the page close the history sheet first; otherwise leave the app. */
+    private void handleBack() {
+        if (web == null) { finish(); return; }
+        web.evaluateJavascript("(window.__nrrlBack && window.__nrrlBack()) ? 'y' : 'n'", value -> {
+            if (value == null || !value.contains("y")) finish();
+        });
     }
 
     @Override

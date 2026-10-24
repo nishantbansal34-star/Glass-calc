@@ -2,14 +2,17 @@ plugins {
     id 'com.android.application'
 }
 
+// -Pplay builds the Google Play bundle, signed with the private upload key from CI secrets.
+def play = project.hasProperty('play')
+
 android {
     namespace 'com.nishant.nrrlcalc'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId 'com.nishant.nrrlcalc'
         minSdk 26
-        targetSdk 34
+        targetSdk 36
         versionCode (System.getenv("GITHUB_RUN_NUMBER") ? System.getenv("GITHUB_RUN_NUMBER").toInteger() : 1)
         versionName "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
     }
@@ -23,12 +26,23 @@ android {
             keyAlias 'nrrlcalc'
             keyPassword 'nrrlcalc'
         }
+        // private upload key for Google Play (only present in CI secrets, never in the repo)
+        if (System.getenv('PLAY_KEYSTORE')) {
+            upload {
+                storeFile file(System.getenv('PLAY_KEYSTORE'))
+                storePassword System.getenv('PLAY_STORE_PASSWORD')
+                keyAlias System.getenv('PLAY_KEY_ALIAS') ?: 'upload'
+                keyPassword System.getenv('PLAY_KEY_PASSWORD') ?: System.getenv('PLAY_STORE_PASSWORD')
+            }
+        }
     }
 
     buildTypes {
         release {
-            minifyEnabled false
-            signingConfig signingConfigs.personal
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig play ? (signingConfigs.findByName('upload') ?: null) : signingConfigs.personal
         }
         debug {
             signingConfig signingConfigs.personal
