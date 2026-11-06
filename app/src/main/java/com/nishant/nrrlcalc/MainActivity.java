@@ -1,6 +1,8 @@
 package com.nishant.nrrlcalc;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.os.PowerManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -160,6 +162,14 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> {
                 if (web != null) web.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
             });
+        }
+
+        /** true on Battery Saver or a low-RAM phone: the page then drops decorative motion */
+        @JavascriptInterface
+        public boolean lite() {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            return (pm != null && pm.isPowerSaveMode()) || (am != null && am.isLowRamDevice());
         }
 
         @JavascriptInterface

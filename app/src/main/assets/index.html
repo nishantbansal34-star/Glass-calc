@@ -47,19 +47,18 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
 /* faint gold ambience so the glass has something to bend */
 .backdrop{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none;background:var(--bg)}
-.glow{position:absolute;border-radius:50%;filter:blur(60px);will-change:transform}
-.g1{width:70vmax;height:70vmax;left:-30vmax;top:-30vmax;background:radial-gradient(circle,rgba(228,185,92,.13),transparent 62%);animation:drift1 28s ease-in-out infinite alternate}
-.g2{width:60vmax;height:60vmax;right:-30vmax;bottom:-22vmax;background:radial-gradient(circle,rgba(195,139,42,.14),transparent 62%);animation:drift2 34s ease-in-out infinite alternate}
+.glow{position:absolute;border-radius:50%;will-change:transform}
+.g1{width:70vmax;height:70vmax;left:-30vmax;top:-30vmax;background:radial-gradient(circle,rgba(228,185,92,.12),rgba(228,185,92,.05) 34%,transparent 66%);animation:drift1 28s ease-in-out infinite alternate}
+.g2{width:60vmax;height:60vmax;right:-30vmax;bottom:-22vmax;background:radial-gradient(circle,rgba(195,139,42,.13),rgba(195,139,42,.05) 34%,transparent 66%);animation:drift2 34s ease-in-out infinite alternate}
 @keyframes drift1{to{transform:translate(14vmax,12vmax)}}
 @keyframes drift2{to{transform:translate(-12vmax,-14vmax)}}
+.lite .glow,.lite .caret{animation:none!important}.lite .lk-ripple{display:none}
 @media (prefers-reduced-motion: reduce){.glow{animation:none}.caret{animation:none!important}}
 
 /* glass material */
 .glass{
   position:relative;isolation:isolate;
   background:linear-gradient(155deg,var(--glass-hi),var(--glass) 60%);
-  -webkit-backdrop-filter:blur(20px) saturate(160%);
-  backdrop-filter:blur(20px) saturate(160%);
   border:1px solid var(--edge-soft);
   box-shadow:
     inset 0 1px 0 var(--edge),
@@ -247,8 +246,8 @@ button.r:active{background:var(--glass)}
 
 /* ===== Liquid kit ===== */
 .key.pressed{transform:none}
+.key,.tbtn,.arrow{will-change:transform}
 .key,.tbtn,.arrow{transition-property:background,color,box-shadow,border-color!important}
-.lk-refract .key.glass:not(.eq){background:linear-gradient(155deg,rgba(255,255,255,.07),rgba(255,255,255,.02) 60%)}
 /* specular rim + touch light overlay (injected span) */
 .lk-glint{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;overflow:hidden}
 .lk-glint::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.2px;
@@ -261,9 +260,9 @@ button.r:active{background:var(--glass)}
 .lk-pressed>.lk-glint::after{transition:opacity .08s}
 
 /* ripple of light on tap */
-.lk-ripple{position:absolute;border-radius:50%;pointer-events:none;z-index:1;width:10px;height:10px;margin:-5px 0 0 -5px;
+.lk-ripple{position:absolute;border-radius:50%;pointer-events:none;z-index:1;width:220px;height:220px;margin:-110px 0 0 -110px;transform:scale(.05);
   background:radial-gradient(circle,rgba(255,236,200,.35),rgba(255,236,200,0) 70%);animation:lkRipple .6s cubic-bezier(.2,.8,.2,1) forwards}
-@keyframes lkRipple{to{transform:scale(28);opacity:0}}
+@keyframes lkRipple{to{transform:scale(1);opacity:0}}
 
 @media (prefers-reduced-motion: reduce){.lk-ripple{animation:none!important}}
 </style>
@@ -944,7 +943,7 @@ window.addEventListener("resize", ()=>{ if(S.mode==="calc") fitMain(); });
 })();
 </script>
 <script>
-/* ===== Liquid kit (shared with Orbe Pay): refraction glass, spring presses, touch light, ripples ===== */
+/* ===== Liquid kit (shared with Orbe Pay): spring presses, touch light, ripples. Glass is drawn with light only: live backdrop filters lagged ===== */
 (function(){
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const root=document.documentElement;
@@ -954,16 +953,25 @@ class Spring{
   set(x){this.x=x;this.t=x;this.v=0;this.emit()}
   on(f){this.subs.push(f);return this}
   emit(){for(const f of this.subs)f(this.x,this)}
-  run(){if(this.raf)return;let last=performance.now();
-    const tick=now=>{let dt=Math.min(.032,(now-last)/1000);last=now;
-      // fixed sub-steps keep stiff springs stable
-      const n=Math.ceil(dt/.004);dt/=n;
-      for(let i=0;i<n;i++){const a=(-this.k*(this.x-this.t)-this.c*this.v)/this.m;this.v+=a*dt;this.x+=this.v*dt}
-      this.emit();
-      if(Math.abs(this.v)<this.eps*4&&Math.abs(this.x-this.t)<this.eps){this.x=this.t;this.v=0;this.emit();this.raf=0;this.done&&this.done();return}
-      this.raf=requestAnimationFrame(tick)};
-    this.raf=requestAnimationFrame(tick)}
+  run(){if(this.raf)return;this.raf=1;Spring.live.add(this);Spring.kick()}
+  step(dt){const n=Math.ceil(dt/.004),h=dt/n;   // fixed sub-steps keep stiff springs stable
+    for(let i=0;i<n;i++){const a=(-this.k*(this.x-this.t)-this.c*this.v)/this.m;this.v+=a*h;this.x+=this.v*h}
+    if(Math.abs(this.v)<this.eps*4&&Math.abs(this.x-this.t)<this.eps){this.x=this.t;this.v=0;this.emit();this.raf=0;Spring.live.delete(this);this.done&&this.done();return}
+    this.emit()}
+  // every spring shares one requestAnimationFrame loop, which stops when nothing moves
+  static kick(){if(Spring.loop)return;let last=performance.now();
+    const f=now=>{const dt=Math.min(.032,Math.max(0,(now-last)/1000));last=now;for(const s of [...Spring.live])s.step(dt);Spring.loop=Spring.live.size?requestAnimationFrame(f):0};
+    Spring.loop=requestAnimationFrame(f)}
 }
+Spring.live=new Set();Spring.loop=0;
+
+/* lite mode: Battery Saver, a low-RAM phone, or few CPU cores -> keep the look, drop decorative motion */
+function checkLite(){let on=false;try{if(window.NRRL&&NRRL.lite)on=!!NRRL.lite()}catch(_){}
+  if(navigator.deviceMemory&&navigator.deviceMemory<=2)on=true;
+  if(!window.NRRL&&navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)on=true;
+  root.classList.toggle("lite",on);return on}
+checkLite();document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkLite()});
+const isLite=()=>root.classList.contains("lite");
 
 const GLASS_SEL=".key,.screen-wrap,.tbtn,.arrow,.seg button";
 function glint(el){if(el.querySelector(":scope>.lk-glint"))return;const g=document.createElement("span");g.className="lk-glint";g.setAttribute("aria-hidden","true");
@@ -972,14 +980,16 @@ function glintAll(scope=document){scope.querySelectorAll(GLASS_SEL).forEach(glin
 function lightAt(el,e){const r=el.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
   el.style.setProperty("--lk-x",x+"px");el.style.setProperty("--lk-y",y+"px");
   el.style.setProperty("--lk-a",(Math.atan2(y-r.height/2,x-r.width/2)*180/Math.PI+90)+"deg")}
-function ripple(el,e){if(reduce)return;const r=el.getBoundingClientRect(),d=document.createElement("span");d.className="lk-ripple";
+function ripple(el,e){if(reduce||isLite())return;const r=el.getBoundingClientRect(),d=document.createElement("span");d.className="lk-ripple";
   d.style.left=(e.clientX-r.left)+"px";d.style.top=(e.clientY-r.top)+"px";
   if(getComputedStyle(el).overflow!=="hidden"){el.style.overflow="hidden"}
   el.appendChild(d);setTimeout(()=>d.remove(),650)}
 
 document.addEventListener("pointermove",e=>{const el=e.target.closest(GLASS_SEL);if(el&&el.classList.contains("lk-pressed"))lightAt(el,e)},{passive:true});
-let tiltA=200;
-addEventListener("deviceorientation",e=>{if(e.gamma==null)return;const a=200+e.gamma*2.2+(e.beta-45)*.6;if(Math.abs(a-tiltA)<1.5)return;tiltA=a;root.style.setProperty("--lk-a",a.toFixed(1)+"deg")},{passive:true});
+// rim light follows phone tilt, throttled: every change restyles all the keys
+let tiltA=200,tiltT=0;
+addEventListener("deviceorientation",e=>{if(e.gamma==null||isLite())return;const now=performance.now();if(now-tiltT<120)return;
+  const a=200+e.gamma*2.2+(e.beta-45)*.6;if(Math.abs(a-tiltA)<4)return;tiltA=a;tiltT=now;root.style.setProperty("--lk-a",a.toFixed(0)+"deg")},{passive:true});
 /* spring press: sink fast, rebound with a little overshoot, can be re-grabbed mid-bounce */
 const springs=new WeakMap();
 function springFor(el){let s=springs.get(el);if(!s){s=new Spring(1,{k:620,c:20}).on(x=>{el.style.transform=x===1?"":`scale(${x.toFixed(4)})`});springs.set(el,s)}return s}
@@ -990,53 +1000,8 @@ document.addEventListener("pointerdown",e=>{
   const up=()=>{springFor(el).to(1,{k:560,c:14});el.classList.remove("lk-pressed");removeEventListener("pointerup",up);removeEventListener("pointercancel",up)};
   addEventListener("pointerup",up);addEventListener("pointercancel",up);
 },{passive:true,capture:true});
-const canRefract=(()=>{try{return !!window.chrome&&CSS.supports("backdrop-filter","url(#x)")&&!/Firefox/.test(navigator.userAgent)}catch(e){return false}})();
-let svgHost=null;
-const NS="http://www.w3.org/2000/svg";
-function host(){if(!svgHost){svgHost=document.createElementNS(NS,"svg");svgHost.setAttribute("width","0");svgHost.setAttribute("height","0");svgHost.setAttribute("aria-hidden","true");svgHost.style.position="absolute";document.body.appendChild(svgHost)}return svgHost}
-/* displacement map: inside a "bezel" band near the rounded edge, push the backdrop sample inward,
-   strongest at the very edge (like a convex glass lens), zero in the flat middle */
-function dispMap(w,h,rad,bezel){
-  const s=.5,W=Math.max(2,Math.round(w*s)),H=Math.max(2,Math.round(h*s)),R=rad*s,B=bezel*s;
-  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");const img=x.createImageData(W,H),d=img.data;
-  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
-    const px=i+.5,py=j+.5;
-    // signed distance to rounded rect (positive inside) and its outward normal
-    const qx=Math.max(R-px,0,px-(W-R)),qy=Math.max(R-py,0,py-(H-R));
-    let dist,nx,ny;
-    if(qx>0&&qy>0){const l=Math.hypot(qx,qy);dist=R-l;nx=(px<R?-1:1)*qx/l;ny=(py<R?-1:1)*qy/l}
-    else{const dl=px,dr=W-px,dt=py,db=H-py,m=Math.min(dl,dr,dt,db);dist=m;nx=m===dl?-1:m===dr?1:0;ny=m===dt?-1:m===db?1:0;if(nx&&ny)ny=0}
-    let mag=0;if(dist<B&&dist>0){const t=1-dist/B;mag=t*t*(3-2*t)} // smooth curvature
-    const o=(j*W+i)*4;d[o]=128-nx*mag*127;d[o+1]=128-ny*mag*127;d[o+2]=128;d[o+3]=255}
-  x.putImageData(img,0,0);return c.toDataURL();
-}
-const filters=new Map();
-function refractFilter(w,h,rad,{bezel=22,scale=34,blur=5,sat=1.35}={}){
-  const key=[Math.round(w),Math.round(h),rad,bezel,scale,blur].join("x");if(filters.has(key))return filters.get(key);
-  const id="lkf"+filters.size;const f=document.createElementNS(NS,"filter");
-  f.setAttribute("id",id);f.setAttribute("x","0");f.setAttribute("y","0");f.setAttribute("width",w);f.setAttribute("height",h);
-  f.setAttribute("filterUnits","userSpaceOnUse");f.setAttribute("primitiveUnits","userSpaceOnUse");f.setAttribute("color-interpolation-filters","sRGB");
-  f.innerHTML=`<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}" result="b"/>
-    <feImage href="${dispMap(w,h,rad,bezel)}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="m"/>
-    <feDisplacementMap in="b" in2="m" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="d"/>
-    <feColorMatrix in="d" type="saturate" values="${sat}"/>`;
-  host().appendChild(f);filters.set(key,id);return id;
-}
-function refract(el,opts){if(!canRefract||!el)return;const r=el.getBoundingClientRect();if(r.width<4||r.height<4)return;
-  const rad=parseFloat(getComputedStyle(el).borderTopLeftRadius)||0;
-  const id=refractFilter(r.width,r.height,Math.min(rad,r.width/2,r.height/2),opts);
-  el.style.backdropFilter=el.style.webkitBackdropFilter=`url(#${id})`}
-
-function refractAll(){
-  document.querySelectorAll(".key:not(.eq)").forEach(el=>refract(el,{bezel:14,scale:22,blur:9,sat:1.6}));
-  document.querySelectorAll(".screen-wrap").forEach(el=>refract(el,{bezel:26,scale:40,blur:12,sat:1.6}));
-}
-if(canRefract)root.classList.add("lk-refract");
-glintAll();requestAnimationFrame(refractAll);
-let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{glintAll();refractAll()},200)});
-new MutationObserver(m=>{let need=false;for(const r of m)for(const n of r.addedNodes)if(n.nodeType===1&&(n.matches?.(GLASS_SEL)||n.querySelector?.(GLASS_SEL)))need=true;if(need){glintAll();requestAnimationFrame(refractAll)}}).observe(document.body,{childList:true,subtree:true});
-// the pad changes size in tool mode: re-measure when it does
-try{new ResizeObserver(()=>requestAnimationFrame(refractAll)).observe(document.getElementById("pad"))}catch(e){}
+glintAll();
+new MutationObserver(m=>{let need=false;for(const r of m)for(const n of r.addedNodes)if(n.nodeType===1&&(n.matches?.(GLASS_SEL)||n.querySelector?.(GLASS_SEL)))need=true;if(need)glintAll()}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 

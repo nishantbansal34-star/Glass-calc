@@ -58,3 +58,8 @@ android {
         checkReleaseBuilds false
     }
 }
+
+dependencies {
+    // installs the startup profile below, so the app opens from cold without waiting on the JIT
+    implementation 'androidx.profileinstaller:profileinstaller:1.4.1'
+}
